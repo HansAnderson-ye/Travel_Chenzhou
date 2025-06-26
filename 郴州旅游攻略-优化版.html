@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>郴州旅游路线规划 - 深度探索湘南风光</title>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.0.0/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a1a3a, #1a3a5f, #0a1a3a);
+            color: #333;
+            line-height: 1.6;
+            padding: 10px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+        }
+        
+        header {
+            background: linear-gradient(to right, #1a3a5f, #2a5298);
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            color: #ffd700;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 10px auto 0;
+        }
+        
+        .map-container {
+            height: 500px;
+            position: relative;
+            border-bottom: 3px solid #1a3a5f;
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            max-width: calc(100% - 30px);
+        }
+        
+        .map-controls button {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 0;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 80px;
+            font-size: 0.9rem;
+        }
+        
+        .map-controls button:hover {
+            background: #1a3a5f;
+            transform: translateY(-2px);
+        }
+        
+        .map-controls button.active {
+            background: #ff6b6b;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+        
+        .map-controls button i {
+            margin-right: 5px;
+        }
+        
+        .content {
+            display: flex;
+            height: 500px;
+        }
+        
+        .overview {
+            width: 30%;
+            background: #f8f9fa;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid #e9ecef;
+        }
+        
+        .details {
+            width: 70%;
+            padding: 20px;
+            overflow-y: auto;
+            background: white;
+        }
+        
+        .panel-title {
+            background: linear-gradient(to right, #1a3a5f, #2a5298);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .route-summary {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #1a3a5f;
+        }
+        
+        .route-summary h3 {
+            color: #1a3a5f;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .days {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .day-card {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            min-width: 120px;
+        }
+        
+        .day-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .day-card.active {
+            border-color: #2a5298;
+            background: #eef4ff;
+        }
+        
+        .day-card h4 {
+            color: #1a3a5f;
+            margin-bottom: 5px;
+        }
+        
+        .day-card .date {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .tips {
+            background: #fff9db;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid #ffd43b;
+        }
+        
+        .tips h3 {
+            color: #e67700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tip-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(255, 242, 204, 0.5);
+            border-radius: 5px;
+            font-size: 0.95rem;
+        }
+        
+        .day-details {
+            display: none;
+        }
+        
+        .day-details.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #e9ecef;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .day-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1a3a5f;
+        }
+        
+        .day-icon {
+            width: 40px;
+            height: 40px;
+            background: #2a5298;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .day-tag {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .day-highlights {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .highlight-card {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        .highlight-card i {
+            font-size: 1.8rem;
+            color: #1a3a5f;
+            margin-bottom: 10px;
+        }
+        
+        .schedule {
+            margin-bottom: 20px;
+        }
+        
+        .schedule-item {
+            display: flex;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            flex-wrap: wrap;
+        }
+        
+        .time {
+            min-width: 80px;
+            background: #eef4ff;
+            padding: 5px 10px;
+            border-radius: 20px;
+            text-align: center;
+            font-weight: 600;
+            color: #1a3a5f;
+            align-self: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .activity {
+            padding-left: 15px;
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .activity h4 {
+            color: #1a3a5f;
+            margin-bottom: 5px;
+        }
+        
+        .tip {
+            background: #eef7ff;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .foods {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .foods h3 {
+            color: #c92a2a;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .food-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .food-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .food-img {
+            height: 140px;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .food-info {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .food-name {
+            font-weight: 700;
+            color: #1a3a5f;
+            margin-bottom: 5px;
+        }
+        
+        .food-desc {
+            font-size: 0.9rem;
+            color: #495057;
+            margin-bottom: 10px;
+            flex: 1;
+        }
+        
+        .food-price {
+            color: #c92a2a;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .route-line {
+            height: 3px;
+            background: linear-gradient(to right, #4CAF50, #2196F3);
+            border-radius: 3px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .route-line::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.8), transparent);
+            animation: routeFlow 2s infinite linear;
+        }
+        
+        @keyframes routeFlow {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .route-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        
+        .route-list li {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .route-list li:hover {
+            background-color: #f0f7ff;
+            transform: translateX(5px);
+        }
+        
+        .route-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .route-list li i {
+            color: #2a5298;
+            font-size: 1.2rem;
+            min-width: 24px;
+            text-align: center;
+        }
+        
+        .route-list .day-marker {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #2a5298;
+            color: white;
+            text-align: center;
+            line-height: 24px;
+            font-size: 0.8rem;
+            margin-right: 10px;
+        }
+        
+        footer {
+            background: #1a3a5f;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9rem;
+        }
+        
+        /* 手机端优化 */
+        @media (max-width: 992px) {
+            .content {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .overview, .details {
+                width: 100%;
+                height: auto;
+            }
+            
+            .map-container {
+                height: 400px;
+            }
+            
+            .days {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .map-container {
+                height: 350px;
+            }
+            
+            .day-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .day-tag {
+                align-self: flex-start;
+            }
+            
+            .highlight-card {
+                min-width: 100%;
+            }
+            
+            .food-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .schedule-item {
+                flex-direction: column;
+            }
+            
+            .time {
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+            
+            .activity {
+                padding-left: 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .map-container {
+                height: 300px;
+            }
+            
+            .map-controls button {
+                padding: 6px 8px;
+                font-size: 0.8rem;
+                min-width: 70px;
+            }
+            
+            .panel-title h2 {
+                font-size: 1.2rem;
+            }
+            
+            .day-card {
+                min-width: calc(50% - 10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-map-marked-alt"></i>
+                <div>
+                    <h1>郴州旅游路线规划地图</h1>
+                    <p class="subtitle">精心设计的4天3晚行程，探索仰天湖草原、雾漫小东江、白廊环湖等湘南精华景点</p>
+                </div>
+            </div>
+        </header>
+        
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="map-controls">
+                <button id="day1-btn" class="active"><i class="fas fa-calendar-day"></i> 第一天</button>
+                <button id="day2-btn"><i class="fas fa-calendar-day"></i> 第二天</button>
+                <button id="day3-btn"><i class="fas fa-calendar-day"></i> 第三天</button>
+                <button id="day4-btn"><i class="fas fa-calendar-day"></i> 第四天</button>
+                <button id="full-route-btn"><i class="fas fa-route"></i> 完整路线</button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="overview">
+                <div class="panel-title">
+                    <i class="fas fa-route"></i>
+                    <h2>行程总览</h2>
+                </div>
+                
+                <div class="route-summary">
+                    <h3><i class="fas fa-map-signs"></i> 整体路线</h3>
+                    <div class="route-line"></div>
+                    <p>郴州西站 → 市区酒店 → 仰天湖草原 → 裕后街美食 → 龙尾坪竹筏 → 东江湖民宿 → 雾漫小东江 → 白廊环湖 → 返程</p>
+                    
+                    <div class="days">
+                        <div class="day-card active" data-day="1">
+                            <h4>Day 1</h4>
+                            <div class="date">7月3日</div>
+                            <p>抵达郴州</p>
+                        </div>
+                        <div class="day-card" data-day="2">
+                            <h4>Day 2</h4>
+                            <div class="date">7月4日</div>
+                            <p>草原避暑</p>
+                        </div>
+                        <div class="day-card" data-day="3">
+                            <h4>Day 3</h4>
+                            <div class="date">7月5日</div>
+                            <p>竹筏戏水</p>
+                        </div>
+                        <div class="day-card" data-day="4">
+                            <h4>Day 4</h4>
+                            <div class="date">7月6日</div>
+                            <p>湖雾诗意</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tips">
+                    <h3><i class="fas fa-lightbulb"></i> 旅行小贴士</h3>
+                    <div class="tip-item">
+                        <strong><i class="fas fa-ticket-alt"></i> 门票预约：</strong> 
+                        仰天湖提前1天公众号预约，小东江买线路1票
+                    </div>
+                    <div class="tip-item">
+                        <strong><i class="fas fa-sun"></i> 防晒装备：</strong> 
+                        SPF50+防晒霜、冰袖、宽檐帽、墨镜（仰天湖紫外线强）
+                    </div>
+                    <div class="tip-item">
+                        <strong><i class="fas fa-car"></i> 交通提示：</strong> 
+                        租SUV车型，检查轮胎/玻璃险；白廊电瓶车砍价至50元/小时
+                    </div>
+                    <div class="tip-item">
+                        <strong><i class="fas fa-utensils"></i> 美食重点：</strong> 
+                        杀猪粉创始店、高子烧鸡公（微辣）、三文鱼生鱼片
+                    </div>
+                    <div class="tip-item">
+                        <strong><i class="fas fa-exclamation-triangle"></i> 安全提示：</strong> 
+                        仰天湖山路限白天通行（10:00-15:00），规避夜间驾驶
+                    </div>
+                </div>
+            </div>
+            
+            <div class="details">
+                <div class="panel-title">
+                    <i class="fas fa-list"></i>
+                    <h2>路线清单</h2>
+                </div>
+                
+                <!-- 整体路线清单 -->
+                <div class="route-list-container">
+                    <h3 style="color: #1a3a5f; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-route"></i> 整体路线清单
+                    </h3>
+                    
+                    <ul class="route-list">
+                        <li>
+                            <span class="day-marker">1</span>
+                            <i class="fas fa-plane-arrival"></i>
+                            <div>
+                                <strong>Day 1 (7月3日): 抵达郴州</strong>
+                                <p>郴州西站取车 → 入住凯里亚德酒店 → 和平夜市宵夜</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="day-marker">2</span>
+                            <i class="fas fa-mountain"></i>
+                            <div>
+                                <strong>Day 2 (7月4日): 草原避暑</strong>
+                                <p>老白露塘杀猪粉 → 仰天湖大草原 → 裕后街美食</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="day-marker">3</span>
+                            <i class="fas fa-water"></i>
+                            <div>
+                                <strong>Day 3 (7月5日): 竹筏戏水</strong>
+                                <p>龙尾坪竹筏 → 高子烧鸡公 → 移宿东江湖民宿</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="day-marker">4</span>
+                            <i class="fas fa-cloud"></i>
+                            <div>
+                                <strong>Day 4 (7月6日): 湖雾诗意</strong>
+                                <p>雾漫小东江 → 白廊环湖 → 醉美东江·三文鱼 → 返程</p>
+                            </div>
+                        </li>
+                    </ul>
+                    
+                    <div class="route-line" style="margin-top: 20px;"></div>
+                    
+                    <div class="tips" style="margin-top: 20px;">
+                        <h3><i class="fas fa-exclamation-circle"></i> 重要提示</h3>
+                        <div class="tip-item">
+                            <strong>门票预约：</strong> 
+                            仰天湖门票需提前1天在公众号预约，小东江购买线路1票
+                        </div>
+                        <div class="tip-item">
+                            <strong>装备准备：</strong> 
+                            防晒用品、舒适运动鞋、薄外套（东江湖晨雾温度较低）
+                        </div>
+                        <div class="tip-item">
+                            <strong>美食推荐：</strong> 
+                            老白露塘杀猪粉（创始店）、高子烧鸡公（微辣）、三文鱼生鱼片
+                        </div>
+                        <div class="tip-item">
+                            <strong>安全须知：</strong> 
+                            仰天湖山路限白天通行（10:00-15:00），避免夜间驾驶
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Day 1 Details -->
+                <div class="day-details active" id="day1-details">
+                    <div class="day-header">
+                        <div class="day-title">
+                            <div class="day-icon">1</div>
+                            <div>
+                                <h3>第一天：接机·市区宵夜</h3>
+                                <p>7月3日 | 抵达郴州，品味夜市美食</p>
+                            </div>
+                        </div>
+                        <div class="day-tag" style="background:#ff6b6b; color:white;">
+                            <i class="fas fa-map-marker-alt"></i> 市区探索
+                        </div>
+                    </div>
+                    
+                    <div class="day-highlights">
+                        <div class="highlight-card">
+                            <i class="fas fa-hotel"></i>
+                            <h4>住宿推荐</h4>
+                            <p>凯里亚德酒店（五岭广场店）</p>
+                        </div>
+                        <div class="highlight-card">
+                            <i class="fas fa-utensils"></i>
+                            <h4>特色美食</h4>
+                            <p>和平夜市宵夜</p>
+                        </div>
+                        <div class="highlight-card">
+                            <i class="fas fa-car"></i>
+                            <h4>交通方式</h4>
+                            <p>租车自驾</p>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule">
+                        <h3><i class="fas fa-list"></i> 当日行程安排</h3>
+                        <div class="schedule-item">
+                            <div class="time">21:30-23:00</div>
+                            <div class="activity">
+                                <h4>抵达郴州，入住酒店</h4>
+                                <p>郴州西站取车 → 接朋友 → 入住凯里亚德酒店（五岭广场店）</p>
+                                <div class="tip"><i class="fas fa-info-circle"></i> 酒店优势：全智能设备+免费停车，距高铁站仅11分钟车程</div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="time">23:00后</div>
+                            <div class="activity">
+                                <h4>和平夜市宵夜</h4>
+                                <p>步行5分钟至和平夜市，品尝郴州特色小吃</p>
+                                <div class="tip"><i class="fas fa-star"></i> <strong>必吃推荐：</strong> 甜妈糖水（桃胶炖奶）+ 灯盏糍粑（夹酸萝卜+蛋）</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="foods">
+                        <h3><i class="fas fa-utensils"></i> 附近美食推荐</h3>
+                        <div class="food-grid">
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">甜妈糖水</div>
+                                    <div class="food-desc">招牌桃胶炖奶，传统广式糖水，清甜不腻</div>
+                                    <div class="food-price">人均: ¥12</div>
+                                </div>
+                            </div>
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">灯盏糍粑</div>
+                                    <div class="food-desc">现炸灯盏糍粑，夹酸萝卜+蛋，外酥里嫩</div>
+                                    <div class="food-price">人均: ¥8</div>
+                                </div>
+                            </div>
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1593560704563-279176cbc0d0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">金国鱼粉</div>
+                                    <div class="food-desc">火车站老字号，红汤鱼粉+葱花蛋</div>
+                                    <div class="food-price">人均: ¥18</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Day 2 Details -->
+                <div class="day-details" id="day2-details">
+                    <div class="day-header">
+                        <div class="day-title">
+                            <div class="day-icon">2</div>
+                            <div>
+                                <h3>第二天：草原避暑·老街深宵</h3>
+                                <p>7月4日 | 仰天湖大草原 + 裕后街美食</p>
+                            </div>
+                        </div>
+                        <div class="day-tag" style="background:#20c997; color:white;">
+                            <i class="fas fa-mountain"></i> 草原风光
+                        </div>
+                    </div>
+                    
+                    <div class="day-highlights">
+                        <div class="highlight-card">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h4>注意事项</h4>
+                            <p>15:00前下山，自备午餐</p>
+                        </div>
+                        <div class="highlight-card">
+                            <i class="fas fa-camera"></i>
+                            <h4>摄影亮点</h4>
+                            <p>霍比特小屋、梅花鹿</p>
+                        </div>
+                        <div class="highlight-card">
+                            <i class="fas fa-utensils"></i>
+                            <h4>美食重点</h4>
+                            <p>老邓鱼粉、真正米饺</p>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule">
+                        <h3><i class="fas fa-list"></i> 当日行程安排</h3>
+                        <div class="schedule-item">
+                            <div class="time">7:30</div>
+                            <div class="activity">
+                                <h4>早餐：老白露塘杀猪粉</h4>
+                                <p>创始店（冲口路）猪杂现烫+溏心蛋</p>
+                                <div class="tip"><i class="fas fa-info-circle"></i> 务必选择创始店，味道最正宗</div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="time">8:30-14:30</div>
+                            <div class="activity">
+                                <h4>仰天湖大草原游玩</h4>
+                                <p>10:00前抵达，避开人流+高温（海拔1314米，日均温24℃）</p>
+                                <div class="tip"><i class="fas fa-star"></i> <strong>精华体验：</strong> 霍比特小屋拍照 → 喂梅花鹿 → 树荫区漫步</div>
+                                <div class="tip"><i class="fas fa-exclamation-triangle"></i> <strong>避雷：</strong> 景区餐厅价高，自备烤玉米/水果；15:00前下山规避山路危险</div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="time">18:30</div>
+                            <div class="activity">
+                                <h4>裕后街美食探索</h4>
+                                <p>老邓鱼粉（红汤醇厚）→ 真正米饺（皮韧馅鲜）→ 安仁烫皮（加蛋版酸辣开胃）</p>
+                                <div class="tip"><i class="fas fa-map-marker-alt"></i> 裕后街主街中段</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="foods">
+                        <h3><i class="fas fa-utensils"></i> 附近美食推荐</h3>
+                        <div class="food-grid">
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">老邓鱼粉</div>
+                                    <div class="food-desc">红汤醇厚，配葱花蛋，郴州特色代表</div>
+                                    <div class="food-price">人均: ¥15</div>
+                                </div>
+                            </div>
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1563245372-f21724e3856d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">真正米饺</div>
+                                    <div class="food-desc">手工米皮包裹鲜肉笋干馅，皮韧馅鲜</div>
+                                    <div class="food-price">人均: ¥10</div>
+                                </div>
+                            </div>
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1626082927389-6cd097cee6a6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">安仁烫皮</div>
+                                    <div class="food-desc">加蛋版酸辣开胃，地道湘南小吃</div>
+                                    <div class="food-price">人均: ¥8</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Day 3 Details -->
+                <div class="day-details" id="day3-details">
+                    <div class="day-header">
+                        <div class="day-title">
+                            <div class="day-icon">3</div>
+                            <div>
+                                <h3>第三天：竹筏戏水·移宿东江</h3>
+                                <p>7月5日 | 龙尾坪竹筏 + 东江湖民宿</p>
+                            </div>
+                        </div>
+                        <div class="day-tag" style="background:#339af0; color:white;">
+                            <i class="fas fa-water"></i> 水上活动
+                        </div>
+                    </div>
+                    
+                    <div class="day-highlights">
+                        <div class="highlight-card">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h4>安全提示</h4>
+                            <p>竹筏穿救生衣，水流平缓</p>
+                        </div>
+                        <div class="highlight-card">
+                            <i class="fas fa-camera"></i>
+                            <h4>摄影亮点</h4>
+                            <p>竹筏汉服拍照</p>
+                        </div>
+                        <div class="highlight-card">
+                            <i class="fas fa-utensils"></i>
+                            <h4>美食重点</h4>
+                            <p>高子烧鸡公、清蒸翘嘴鱼</p>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule">
+                        <h3><i class="fas fa-list"></i> 当日行程安排</h3>
+                        <div class="schedule-item">
+                            <div class="time">9:00-10:30</div>
+                            <div class="activity">
+                                <h4>龙尾坪竹筏体验</h4>
+                                <p>0落差安全版，租汉服20元/套拍照</p>
+                                <div class="tip"><i class="fas fa-info-circle"></i> 竹筏平稳安全，适合拍照，建议提前预订</div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="time">12:00</div>
+                            <div class="activity">
+                                <h4>午餐：高子烧鸡公</h4>
+                                <p>仔鸡+魔芋豆腐，备注"广东微辣"</p>
+                                <div class="tip"><i class="fas fa-exclamation-triangle"></i> <strong>注意：</strong> 郴州辣度较高，务必说明"广东微辣"</div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="time">14:00-15:00</div>
+                            <div class="activity">
+                                <h4>驾车至东江湖民宿</h4>
+                                <p>走京港澳高速，1小时无山路</p>
+                                <div class="tip"><i class="fas fa-car"></i> 路况良好，全程高速，无需担心山路</div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="time">晚餐</div>
+                            <div class="activity">
+                                <h4>民宿农家宴</h4>
+                                <p>清蒸翘嘴鱼+柴火豆腐（尝湖鲜本味）</p>
+                                <div class="tip"><i class="fas fa-star"></i> <strong>推荐：</strong> 东江湖特色鱼鲜，新鲜美味</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="foods">
+                        <h3><i class="fas fa-utensils"></i> 附近美食推荐</h3>
+                        <div class="food-grid">
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1593560704563-279176cbc0d0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">高子烧鸡公</div>
+                                    <div class="food-desc">仔鸡煲（微辣）+魔芋豆腐，郴州名菜</div>
+                                    <div class="food-price">人均: ¥45</div>
+                                </div>
+                            </div>
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">清蒸翘嘴鱼</div>
+                                    <div class="food-desc">东江湖鲜鱼清蒸，肉质鲜嫩，原汁原味</div>
+                                    <div class="food-price">人均: ¥60</div>
+                                </div>
+                            </div>
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1625944559233-9d89d7e7f3d0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">柴火豆腐</div>
+                                    <div class="food-desc">传统柴火制作，豆香浓郁，口感细腻</div>
+                                    <div class="food-price">人均: ¥25</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Day 4 Details -->
+                <div class="day-details" id="day4-details">
+                    <div class="day-header">
+                        <div class="day-title">
+                            <div class="day-icon">4</div>
+                            <div>
+                                <h3>第四天：湖雾诗意·返程</h3>
+                                <p>7月6日 | 雾漫小东江 + 白廊环湖</p>
+                            </div>
+                        </div>
+                        <div class="day-tag" style="background:#9c36b5; color:white;">
+                            <i class="fas fa-cloud"></i> 湖雾奇观
+                        </div>
+                    </div>
+                    
+                    <div class="day-highlights">
+                        <div class="highlight-card">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h4>观雾时间</h4>
+                            <p>6:00-8:00最佳</p>
+                        </div>
+                        <div class="highlight-card">
+                            <i class="fas fa-camera"></i>
+                            <h4>摄影亮点</h4>
+                            <p>渔夫撒网、晨雾缭绕</p>
+                        </div>
+                        <div class="highlight-card">
+                            <i class="fas fa-utensils"></i>
+                            <h4>美食重点</h4>
+                            <p>三文鱼生鱼片、凉拌鱼皮</p>
+                        </div>
+                    </div>
+                    
+                    <div class="schedule">
+                        <h3><i class="fas fa-list"></i> 当日行程安排</h3>
+                        <div class="schedule-item">
+                            <div class="time">6:00-8:00</div>
+                            <div class="activity">
+                                <h4>雾漫小东江</h4>
+                                <p>仅玩2号观雾台+撒网，省时避人流</p>
+                                <div class="tip"><i class="fas fa-info-circle"></i> 最佳观雾时间：6:00-8:00，提前购票</div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="time">9:00</div>
+                            <div class="activity">
+                                <h4>民宿早餐</h4>
+                                <p>东江鱼粥暖胃</p>
+                                <div class="tip"><i class="fas fa-star"></i> <strong>推荐：</strong> 民宿自制鱼粥，鲜香暖胃</div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="time">10:00-12:00</div>
+                            <div class="activity">
+                                <h4>白廊电瓶车环湖</h4>
+                                <p>凤凰岛方向树荫多，停浅滩玩水</p>
+                                <div class="tip"><i class="fas fa-info-circle"></i> 租电瓶车砍价至50元/小时，检查车况</div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="time">12:30</div>
+                            <div class="activity">
+                                <h4>午餐：醉美东江·三文鱼</h4>
+                                <p>生鱼片+凉拌鱼皮，食材直供</p>
+                                <div class="tip"><i class="fas fa-star"></i> <strong>特色：</strong> 一鱼五吃，生鱼片必点</div>
+                            </div>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="time">14:00</div>
+                            <div class="activity">
+                                <h4>返程郴州西站</h4>
+                                <p>车程1.5小时，预留堵车时间</p>
+                                <div class="tip"><i class="fas fa-exclamation-triangle"></i> <strong>注意：</strong> 预留充足时间前往高铁站，避开高峰时段</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="foods">
+                        <h3><i class="fas fa-utensils"></i> 附近美食推荐</h3>
+                        <div class="food-grid">
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">醉美东江·三文鱼</div>
+                                    <div class="food-desc">一鱼五吃（生鱼片必点），食材新鲜直供</div>
+                                    <div class="food-price">人均: ¥80</div>
+                                </div>
+                            </div>
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1626082927389-6cd097cee6a6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">凉拌鱼皮</div>
+                                    <div class="food-desc">爽脆可口，酸辣开胃，下酒佳品</div>
+                                    <div class="food-price">人均: ¥25</div>
+                                </div>
+                            </div>
+                            <div class="food-card">
+                                <div class="food-img" style="background-image: url('https://images.unsplash.com/photo-1625944525533-473f1f0c15c8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80');"></div>
+                                <div class="food-info">
+                                    <div class="food-name">东江鱼粥</div>
+                                    <div class="food-desc">鲜鱼熬制，米粒开花，暖胃养生</div>
+                                    <div class="food-price">人均: ¥15</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 郴州旅游路线规划系统 | 数据来源：郴州文旅局官方指南(2025) | 地图数据：高德地图</p>
+        </footer>
+    </div>
+    
+    <script src="https://unpkg.com/maplibre-gl@3.0.0/dist/maplibre-gl.js"></script>
+    <script>
+        // 初始化地图
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: {
+                'version': 8,
+                'sources': {
+                    'raster-tiles': {
+                        'type': 'raster',
+                        'tiles': ['https://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=8'],
+                        'tileSize': 256
+                    }
+                },
+                'layers': [{
+                    'id': 'simple-tiles',
+                    'type': 'raster',
+                    'source': 'raster-tiles',
+                    'minzoom': 0,
+                    'maxzoom': 18
+                }]
+            },
+            center: [113.0, 25.8], // 郴州大致中心位置
+            zoom: 10
+        });
+        
+        // 添加地图控件
+        map.addControl(new maplibregl.NavigationControl(), 'top-right');
+        
+        // 景点坐标数据
+        const attractions = {
+            'day1': [
+                {name: '郴州西站', lnglat: [112.996, 25.756], type: 'transport'},
+                {name: '凯里亚德酒店', lnglat: [113.014, 25.782], type: 'hotel'},
+                {name: '和平夜市', lnglat: [113.020, 25.781], type: 'food'}
+            ],
+            'day2': [
+                {name: '老白露塘杀猪粉', lnglat: [113.042, 25.794], type: 'food'},
+                {name: '仰天湖大草原', lnglat: [112.962, 25.533], type: 'attraction'},
+                {name: '裕后街', lnglat: [113.028, 25.781], type: 'food'}
+            ],
+            'day3': [
+                {name: '龙尾坪竹筏', lnglat: [113.042, 25.789], type: 'attraction'},
+                {name: '高子烧鸡公', lnglat: [113.035, 25.793], type: 'food'},
+                {name: '喜言·湖隐松间', lnglat: [113.322, 25.799], type: 'hotel'}
+            ],
+            'day4': [
+                {name: '雾漫小东江', lnglat: [113.350, 25.800], type: 'attraction'},
+                {name: '白廊码头', lnglat: [113.400, 25.850], type: 'attraction'},
+                {name: '醉美东江·三文鱼', lnglat: [113.405, 25.855], type: 'food'}
+            ]
+        };
+        
+        // 路线坐标数据
+        const routes = {
+            'day1': [[112.996, 25.756], [113.014, 25.782], [113.020, 25.781]],
+            'day2': [[113.014, 25.782], [112.962, 25.533], [113.028, 25.781]],
+            'day3': [[113.014, 25.782], [113.042, 25.789], [113.035, 25.793], [113.322, 25.799]],
+            'day4': [[113.322, 25.799], [113.350, 25.800], [113.400, 25.850], [112.996, 25.756]]
+        };
+        
+        // 颜色映射
+        const dayColors = {
+            'day1': '#FF6B6B',
+            'day2': '#20C997',
+            'day3': '#339AF0',
+            'day4': '#9C36B5'
+        };
+        
+        // 图标映射
+        const icons = {
+            'transport': 'fa-train',
+            'hotel': 'fa-hotel',
+            'food': 'fa-utensils',
+            'attraction': 'fa-mountain'
+        };
+        
+        // 添加路线和标记
+        map.on('load', function() {
+            // 添加路线图层
+            Object.keys(routes).forEach(day => {
+                map.addSource(`route-${day}`, {
+                    'type': 'geojson',
+                    'data': {
+                        'type': 'Feature',
+                        'properties': {},
+                        'geometry': {
+                            'type': 'LineString',
+                            'coordinates': routes[day]
+                        }
+                    }
+                });
+                
+                map.addLayer({
+                    'id': `route-${day}`,
+                    'type': 'line',
+                    'source': `route-${day}`,
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round',
+                        'line-round-limit': 0.5
+                    },
+                    'paint': {
+                        'line-color': dayColors[day],
+                        'line-width': 4,
+                        'line-opacity': 0,
+                        'line-dasharray': [2, 2]
+                    }
+                });
+            });
+            
+            // 添加标记
+            Object.keys(attractions).forEach(day => {
+                attractions[day].forEach((point, index) => {
+                    const el = document.createElement('div');
+                    el.className = 'marker';
+                    el.innerHTML = `<i class="fas ${icons[point.type]}" style="color:${dayColors[day]}; font-size:24px;"></i>`;
+                    
+                    new maplibregl.Marker(el)
+                        .setLngLat(point.lnglat)
+                        .setPopup(new maplibregl.Popup().setHTML(`
+                            <div style="padding:10px">
+                                <h3 style="margin:0 0 5px; color:${dayColors[day]}">${point.name}</h3>
+                                <p>${day.replace('day', '第')}天行程点</p>
+                            </div>
+                        `))
+                        .addTo(map);
+                });
+            });
+            
+            // 默认显示第一天
+            showDayRoute('day1');
+        });
+        
+        // 显示指定日期的路线
+        function showDayRoute(day) {
+            // 隐藏所有路线
+            Object.keys(routes).forEach(d => {
+                map.setPaintProperty(`route-${d}`, 'line-opacity', 0);
+            });
+            
+            // 显示当前路线
+            map.setPaintProperty(`route-${day}`, 'line-opacity', 0.8);
+            
+            // 调整视图
+            const coordinates = routes[day];
+            const bounds = coordinates.reduce((bounds, coord) => {
+                return bounds.extend(coord);
+            }, new maplibregl.LngLatBounds(coordinates[0], coordinates[0]));
+            
+            map.fitBounds(bounds, {
+                padding: 100,
+                duration: 1000
+            });
+        }
+        
+        // 切换日期功能
+        const dayCards = document.querySelectorAll('.day-card');
+        const dayDetails = document.querySelectorAll('.day-details');
+        const dayButtons = document.querySelectorAll('.map-controls button');
+        
+        function activateDay(dayNum) {
+            const day = `day${dayNum}`;
+            
+            // 更新卡片激活状态
+            dayCards.forEach(c => c.classList.remove('active'));
+            document.querySelector(`.day-card[data-day="${dayNum}"]`).classList.add('active');
+            
+            // 更新按钮激活状态
+            dayButtons.forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`${day}-btn`).classList.add('active');
+            
+            // 显示对应日期的详情
+            dayDetails.forEach(detail => {
+                detail.classList.remove('active');
+                if (detail.id === `${day}-details`) {
+                    detail.classList.add('active');
+                }
+            });
+            
+            // 更新地图路线
+            showDayRoute(day);
+        }
+        
+        dayCards.forEach(card => {
+            card.addEventListener('click', function() {
+                activateDay(this.getAttribute('data-day'));
+            });
+        });
+        
+        // 地图控制按钮
+        document.getElementById('day1-btn').addEventListener('click', () => activateDay('1'));
+        document.getElementById('day2-btn').addEventListener('click', () => activateDay('2'));
+        document.getElementById('day3-btn').addEventListener('click', () => activateDay('3'));
+        document.getElementById('day4-btn').addEventListener('click', () => activateDay('4'));
+        
+        document.getElementById('full-route-btn').addEventListener('click', () => {
+            // 显示完整路线
+            dayButtons.forEach(btn => btn.classList.remove('active'));
+            document.getElementById('full-route-btn').classList.add('active');
+            
+            // 隐藏所有路线详情
+            dayDetails.forEach(detail => detail.classList.remove('active'));
+            
+            // 显示所有路线
+            Object.keys(routes).forEach(d => {
+                map.setPaintProperty(`route-${d}`, 'line-opacity', 0.6);
+            });
+            
+            // 调整视图到整个区域
+            map.fitBounds([[112.9, 25.5], [113.5, 25.9]], {
+                padding: 100,
+                duration: 1000
+            });
+        });
+    </script>
+</body>
+</html>
